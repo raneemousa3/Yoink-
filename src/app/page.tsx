@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { getListings } from "@/lib/listings";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { HeaderAuth } from "@/components/layout/HeaderAuth";
 import { SearchBar } from "@/components/listings/SearchBar";
 
 interface Props {
@@ -18,12 +19,7 @@ export default async function HomePage({ searchParams }: Props) {
       <main className="mx-auto max-w-3xl px-4 pt-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-zinc-900">Yoink!</h1>
-          <Link
-            href="/login"
-            className="text-sm font-medium text-zinc-600 hover:underline"
-          >
-            Sign in
-          </Link>
+          <HeaderAuth />
         </div>
         <Suspense fallback={<div className="h-20 animate-pulse rounded bg-zinc-200" />}>
           <SearchBar category={category} />
