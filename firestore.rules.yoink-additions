@@ -1,0 +1,42 @@
+// ========================================
+// YOINK ADDITIONS - Add to your existing Firestore rules
+// Insert inside match /databases/{database}/documents { ... }
+// Right after the ITEMS block
+// ========================================
+// NOTE: For testing without .edu email, change hasEduEmail() to isSignedIn()
+// in the create rules below.
+// ========================================
+
+// YOINK APP: Listings (our app uses "listings", not "items")
+match /listings/{listingId} {
+  // Read: Public - home feed loads without auth
+  allow read: if true;
+
+  // Create: Authenticated, .edu email, creating as owner
+  allow create: if isSignedIn()
+    && hasEduEmail()
+    && request.resource.data.ownerId == request.auth.uid;
+
+  // Update/Delete: Owner or admin
+  allow update, delete: if (isSignedIn() && resource.data.ownerId == request.auth.uid) || isAdmin();
+}
+
+// YOINK APP: Rental requests (before they become reservations/transactions)
+match /rentalRequests/{requestId} {
+  allow read: if isSignedIn()
+    && (resource.data.renterId == request.auth.uid
+        || resource.data.ownerId == request.auth.uid);
+  allow create: if isSignedIn() && hasEduEmail();
+  allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+  allow delete: if isAdmin();
+}
+
+// YOINK APP: Transactions (approved rentals)
+match /transactions/{transactionId} {
+  allow read: if isSignedIn()
+    && (resource.data.renterId == request.auth.uid
+        || resource.data.ownerId == request.auth.uid);
+  allow create: if false; // Via backend/approval flow
+  allow update: if isSignedIn();
+  allow delete: if isAdmin();
+}

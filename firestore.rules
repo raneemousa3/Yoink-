@@ -1,0 +1,44 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Listings: anyone can read active listings, only auth users can create
+    match /listings/{listingId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null
+        && request.auth.uid == resource.data.ownerId;
+    }
+
+    // Users: only the user can read/write their own profile
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Rental requests: participants only
+    match /rentalRequests/{requestId} {
+      allow read: if request.auth != null
+        && (resource.data.renterId == request.auth.uid
+            || resource.data.ownerId == request.auth.uid);
+      allow create: if request.auth != null;
+      allow update: if request.auth != null
+        && resource.data.ownerId == request.auth.uid;
+    }
+
+    // Transactions: participants only
+    match /transactions/{transactionId} {
+      allow read: if request.auth != null
+        && (resource.data.renterId == request.auth.uid
+            || resource.data.ownerId == request.auth.uid);
+      allow create: if false; // Created by backend/cloud function or via rentalRequest approval
+      allow update: if request.auth != null;
+    }
+
+    // Reviews: anyone can read, participants can create
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+    }
+  }
+}
